@@ -37,6 +37,14 @@ def data_downcasting(df):
                 df[col] = df[col].astype(np.int32)
     return df
 
+def count_missings(data):
+    total = data.isnull().sum().sort_values(ascending = False)
+    percent = (data.isnull().sum() / data.isnull().count() * 100).sort_values(ascending = False)
+    table = pd.concat([total, percent], axis = 1, keys = ["Total", "Percent"])
+    table = table[table["Total"] > 0]
+    return table
+
+
 def main():
     pass
 
