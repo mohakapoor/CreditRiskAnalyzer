@@ -1,2 +1,6 @@
 *.csv
 *.parquet
+
+.venv/
+
+legacy_code/
