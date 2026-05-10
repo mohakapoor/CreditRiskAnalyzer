@@ -4,3 +4,4 @@
 .venv/
 
 legacy_code/
+src/__pycache__
