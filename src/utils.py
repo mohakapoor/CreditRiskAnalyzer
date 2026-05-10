@@ -38,12 +38,30 @@ def data_downcasting(df):
     return df
 
 def count_missings(data):
-    total = data.isnull().sum().sort_values(ascending = False)
-    percent = (data.isnull().sum() / data.isnull().count() * 100).sort_values(ascending = False)
-    table = pd.concat([total, percent], axis = 1, keys = ["Total", "Percent"])
-    table = table[table["Total"] > 0]
-    return table
-
+    total_rows = len(data)
+    null_data = []
+    for col in data.columns:
+        null_count = data[col].null_count()
+        if null_count >0 :
+            null_data.append(
+                {
+                    "Feature": col,
+                    "Total": null_count,
+                    "Percent": (null_count/ total_rows)*100,
+                }
+            )
+    return pl.DataFrame(null_data).sort("Total",descending=True)
+    
+def convert_days(data, features, t = 12, rounding = True, replace = False):
+    exprs = []
+    for var in features:
+        calc = -pl.col(var)/t
+        if rounding:
+            calc = calc.round(0)
+        final_expr = pl.when(calc<0).then(None).otherwise(calc)
+        col_name = var if replace else f"CONVERTED_{var}"
+        exprs.append(final_expr.alias(col_name))
+    return data.with_columns(exprs)
 
 def main():
     pass
