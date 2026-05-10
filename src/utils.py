@@ -16,13 +16,13 @@ def csv_to_prqt(csv_path, output_dir):
     except UnicodeDecodeError:
         print(f"UTF-8 decode failed for {csv_path}, trying 'latin1' encoding...")
         df = pd.read_csv(csv_path, encoding='latin1')
-        
+
     df = data_downcasting(df)
     df.to_parquet(output_dir)    
     print(f"converted {csv_path} to parquet")
 
 def data_downcasting(df):
-    for col in _df.columns:
+    for col in df.columns:
         col_type = df[col].dtype
         if col_type != object:
             c_min = df[col].min()
