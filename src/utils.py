@@ -69,7 +69,7 @@ def create_logs(data, features, replace = False):
         ln = (pl.col(var).abs()+1).log()
         col_name = var if replace else f"Log_{var}"
         exprs.append(ln.alias(col_name))
-    return data
+    return data.with_columns(exprs)
 
 
 def main():
