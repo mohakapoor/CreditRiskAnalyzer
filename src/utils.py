@@ -63,6 +63,15 @@ def convert_days(data, features, t = 12, rounding = True, replace = False):
         exprs.append(final_expr.alias(col_name))
     return data.with_columns(exprs)
 
+def create_logs(data, features, replace = False):
+    exprs = []
+    for var in features:
+        ln = (pl.col(var).abs()+1).log()
+        col_name = var if replace else f"Log_{var}"
+        exprs.append(ln.alias(col_name))
+    return data
+
+
 def main():
     pass
 
