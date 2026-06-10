@@ -9,7 +9,7 @@ A resume-focused, production-grade credit risk scoring system built on the Home 
 - Handle large data constraints via ID-based sampling and university hardware (4090).
 - Add MLflow for experiment tracking (starts after data prep).
 - Add Evidently AI for drift monitoring.
-- Add an LLM explanation layer (Gemini) using model feature importance (No SHAP).
+- Add an LLM explanation layer (Gemini) with RAG for policy grounding and actionable advice (No SHAP).
 - (Optional) Port feature engineering from Pandas to Polars for resume value.
 
 ---
@@ -60,14 +60,15 @@ A resume-focused, production-grade credit risk scoring system built on the Home 
 
 ---
 
-### Phase 3 — LLM Explanation Layer (No SHAP)
+### Phase 3 — LLM Explanation & RAG Layer (No SHAP)
 
-**Goal:** Generate plain-English explanations for credit decisions.
+**Goal:** Generate plain-English explanations for credit decisions grounded in company policy and provide actionable advice.
 
 **Approach:**
-- **No SHAP:** Do not use SHAP values (avoid compute overhead and complexity).
-- **Alternative:** Use LightGBM's built-in feature importance (gain or split) to identify the top predictive features.
-- **LLM Integration:** Pass the top feature values for a specific applicant to Gemini 1.5 Flash to generate a natural language explanation of the risk profile.
+- **No SHAP:** Do not use SHAP values. Use LightGBM's built-in feature importance to identify top predictive features.
+- **RAG Guidebook:** Create a `credit_policy_guide.txt` containing dummy bank policies (e.g., thresholds for `EXT_SOURCE` or `DAYS_EMPLOYED`) and actionable advice for rejected applicants.
+- **Retrieval-Augmented Generation (RAG):** When generating an explanation, the system retrieves relevant rules/advice from the guidebook based on the applicant's top features.
+- **LLM Output:** Gemini 1.5 Flash generates a response that explains the decision *and* provides specific steps the applicant can take to improve their score (e.g., "Reduce loan amount", "Wait for longer employment history").
 
 ---
 
@@ -88,7 +89,7 @@ A resume-focused, production-grade credit risk scoring system built on the Home 
 
 **Approach:**
 - Create a FastAPI app with a `/predict` endpoint.
-- Endpoint takes applicant data, loads the model from MLflow, gets feature importance, calls Gemini, and returns the score + explanation.
+- Endpoint takes applicant data, loads the model from MLflow, gets feature importance, calls Gemini with RAG, and returns the score + explanation + advice.
 
 ---
 
@@ -96,5 +97,5 @@ A resume-focused, production-grade credit risk scoring system built on the Home 
 - **Data:** Polars (or Pandas), Parquet.
 - **ML:** LightGBM.
 - **MLOps:** MLflow, Evidently AI.
-- **GenAI:** Gemini 1.5 Flash (via API).
+- **GenAI:** Gemini 1.5 Flash (via API), RAG (Custom implementation).
 - **Deployment:** FastAPI.

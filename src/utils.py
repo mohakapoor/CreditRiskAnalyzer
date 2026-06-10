@@ -1,4 +1,5 @@
 import pandas as pd
+import polars as pl
 import numpy as np
 from pathlib import Path
 
@@ -63,7 +64,7 @@ def convert_days(data, features, t = 12, rounding = True, replace = False):
         exprs.append(final_expr.alias(col_name))
     return data.with_columns(exprs)
 
-def create_logs(data, features, replace = False):
+def create_logarithms(data, features, replace = False):
     exprs = []
     for var in features:
         ln = (pl.col(var).abs()+1).log()
@@ -71,6 +72,31 @@ def create_logs(data, features, replace = False):
         exprs.append(ln.alias(col_name))
     return data.with_columns(exprs)
 
+def create_null_flags(data,features=None):
+    if features is None:
+        features = data.select(pl.all().exclude(pl.col("SK_ID_CURR"))).columns
+    exprs = []
+    for var in features:
+        is_null = pl.when(pl.col(var).is_null()).then(1).otherwise(0).alias(f"ISNULL_{var}")
+        exprs.append(is_null)
+    return data.with_columns(exprs)
+
+def treat_factors(data,method="label"):
+    if method == "label":
+        factor_cols = data.select(pl.col(pl.Categorical)).columns
+        return data.with_columns(
+            pl.col(factor_cols).cast(pl.Categorical)
+        )
+    elif method == "dummy":
+        factor_cols = data.select(pl.col(pl.Categorical)).columns
+        return data.with_columns(
+            pl.col(factor_cols).to_dummies()
+        )
+    return data
+
+def compute_accept_reject_ratio(data,lags = [1,3,5]):
+    pass
+    
 
 def main():
     pass
