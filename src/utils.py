@@ -1,5 +1,6 @@
 import pandas as pd
 import polars as pl
+import polars.selectors as cs
 import numpy as np
 from pathlib import Path
 
@@ -94,9 +95,74 @@ def treat_factors(data,method="label"):
         )
     return data
 
-def compute_accept_reject_ratio(data,lags = [1,3,5]):
-    pass
+def compute_accept_reject_ratio(data: pl.DataFrame, lags=[1, 3, 5]) -> pl.DataFrame:
+    agg_exprs = []
+
+    for t in lags:
+        approve_expr = (
+            (pl.col("NAME_CONTRACT_STATUS").head(t) == "Approved")
+            .mean()
+            .alias(f"APPROVE_RATIO_{t}")
+        )
+        reject_expr = (
+            (pl.col("NAME_CONTRACT_STATUS").head(t) == "Refused")
+            .mean()
+            .alias(f"REJECT_RATIO_{t}")
+        )
+        # Use extend instead of append to keep the list flat
+        agg_exprs.extend([approve_expr, reject_expr])
+
+    # Sort descending on DAYS_DECISION to bring the most recent applications (closest to 0) to the top
+    aggs = (
+        data.sort(["SK_ID_CURR", "DAYS_DECISION"], descending=[False, True])
+        .group_by("SK_ID_CURR")
+        .agg(agg_exprs)
+    )
+
+    return data.join(aggs, on="SK_ID_CURR", how="left")
+
+def aggregate_data(data: pl.DataFrame, id_var: str, label: str = None) -> pl.DataFrame:
+    print("- Preparing the dataset...")
     
+    # Find columns to aggregate
+    num_cols = data.select(cs.numeric().exclude(id_var)).columns
+    fac_cols = data.select(cs.by_dtype(pl.String, pl.Categorical).exclude(id_var)).columns
+    
+    print(f"- Extracted {len(fac_cols)} factors and {len(num_cols)} numerics...")
+    
+    agg_exprs = []
+    
+    if len(num_cols) > 0:
+        print("- Aggregating numeric features...")
+        agg_exprs.extend([
+            cs.numeric().exclude(id_var).mean().name.suffix("_mean"),
+            cs.numeric().exclude(id_var).std().name.suffix("_std"),
+            cs.numeric().exclude(id_var).min().name.suffix("_min"),
+            cs.numeric().exclude(id_var).max().name.suffix("_max")
+        ])
+        
+    if len(fac_cols) > 0:
+        print("- Aggregating factor features...")
+        agg_exprs.extend([
+            # .mode() can return multiple values if there's a tie, so we take .first()
+            cs.by_dtype(pl.String, pl.Categorical).exclude(id_var).mode().first().name.suffix("_mode"),
+            cs.by_dtype(pl.String, pl.Categorical).exclude(id_var).n_unique().name.suffix("_unique")
+        ])
+        
+    if not agg_exprs:
+        return data.select([id_var]).unique()
+        
+    # Execute the aggregation
+    agg_data = data.group_by(id_var).agg(agg_exprs)
+    
+    # Add label prefix
+    if label:
+        rename_mapping = {c: f"{label}_{c}" for c in agg_data.columns if c != id_var}
+        agg_data = agg_data.rename(rename_mapping)
+        
+    print(f"- Final dimensions: {agg_data.shape}")
+    
+    return agg_data
 
 def main():
     pass
