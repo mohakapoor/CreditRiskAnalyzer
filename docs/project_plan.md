@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-A resume-focused, production-grade credit risk scoring system built on the Home Credit Default Risk dataset. Instead of building from scratch, this project uses existing legacy code as a launchpad, focusing on adding MLOps best practices, monitoring, and an LLM layer to create a high-impact portfolio piece quickly.
+A production-grade credit risk scoring system built on the Home Credit Default Risk dataset. Instead of building from scratch, this project uses existing legacy code as a launchpad, focusing on adding MLOps best practices, monitoring, and an LLM layer to create an enterprise-ready solution.
 
 **Key Goals:**
 - Use legacy data prep and modeling as a baseline.
@@ -43,7 +43,7 @@ A resume-focused, production-grade credit risk scoring system built on the Home 
 - Use `legacy_code/code_1_data_prep.ipynb` as the base.
 - **Local Dev (Today):** Address memory limits by sampling ~50k `SK_ID_CURR` from `application_train` and filtering all other tables to match.
 - **Full Run (Tomorrow):** Run the full script on the university 4090 machine (check RAM availability).
-- **Resume Flex:** Consider porting the Pandas operations to Polars for speed and modern stack representation.
+- **Performance Optimization:** Port the legacy Pandas operations to Polars for speed and modern data stack representation.
 - **Output:** A single Parquet file containing aggregated features for all applicants.
 
 ---
@@ -93,7 +93,7 @@ A resume-focused, production-grade credit risk scoring system built on the Home 
 
 ---
 
-## Tech Stack (Resume Focus)
+## Enterprise Tech Stack
 - **Data:** Polars (or Pandas), Parquet.
 - **ML:** LightGBM.
 - **MLOps:** MLflow, Evidently AI.
