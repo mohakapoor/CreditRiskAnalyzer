@@ -52,7 +52,12 @@ def count_missings(data):
                     "Percent": (null_count/ total_rows)*100,
                 }
             )
-    return pl.DataFrame(null_data).sort("Total",descending=True)
+    if not null_data:
+        return pl.DataFrame(
+            {"Feature": [], "Total": [], "Percent": []}, 
+            schema={"Feature": pl.String, "Total": pl.Int64, "Percent": pl.Float64}
+        )
+    return pl.DataFrame(null_data).sort("Total", descending=True)
     
 def convert_days(data, features, t = 12, rounding = True, replace = False):
     exprs = []
